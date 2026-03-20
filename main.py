@@ -5,18 +5,13 @@ import constants as c
 class Main:
     def __init__(self):
         self.player_stone = 0
-        self.stones
         self.com_level = 0
         self.result = ""
 
     def main(self):
         print("ようこそ、ここではリバーシをプレイできます。")
 
-        while True:
-            if (_ := input("プレイしますか？[y/n]>")) != "y":
-                print("終了します。")
-                break
-
+        while (_ := input("プレイしますか？[y/n]>")) == "y":
             self.player_stone = self.choose(c.PROMPTS.get("STONE"))
             self.com_level = self.choose(c.PROMPTS.get("LEVEL"))
 
@@ -26,13 +21,18 @@ class Main:
 
             print("もう一度", end="")
 
-    def choose(self, prompt) -> int:
-        while (chose := int(input(prompt))) != 1 or 2:
-            print("無効な値です。")
+        print("終了します。")
 
-        return chose
+    def choose(self, prompt) -> int:
+        chose = 0
+
+        while True:
+            if (chose := int(input(prompt))) == 1 or 2:
+                return chose
+
+            print("無効な値です。")
 
 
 if __name__ == "__main__":
-    m = Main
+    m = Main()
     m.main()

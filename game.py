@@ -1,5 +1,9 @@
 import board
 import constants as c
+import random
+import time
+
+import pprint
 
 
 class Game:
@@ -13,13 +17,20 @@ class Game:
     def play_game(self) -> str:
         pass_count = 0
 
-        while pass_count >= 2:
+        while pass_count < 2:
             valid_squares = self.check_squares()
 
-            if range(valid_squares) > 0:
+            if len(valid_squares) > 0:
                 self.draw_board()
-                self.player_move() if self.current_turn == self.PLAYER_TURN else self.com_move1
-                self.reverse_stone()
+
+                self.reverse_stones(
+                    self.player_move(valid_squares)
+                    if self.current_turn == self.PLAYER_TURN
+                    else self.com_move1(valid_squares)
+                )
+
+                pass_count = 0
+                self.current_turn *= -1
             else:
                 pass_count += 1
 
@@ -27,17 +38,47 @@ class Game:
 
     def check_squares(self) -> list:
         valid_squares = []
+
+        for y in range(1, c.COLS + 1):
+            for x in range(1, c.ROWS + 1):
+                if self.b.b[y][x] == c.BS.get("SPACE"):
+                    for i in range(-1, 2):
+                        for j in range(-1, 2):
+                            next_y = y + i
+                            next_x = x + j
+
+                            if self.b.b[next_y][next_x] == self.current_turn * -1:
+                                while True:
+                                    next_y += i
+                                    next_x += j
+
+                                    if self.b.b[next_y][next_x] == self.current_turn:
+                                        valid_squares.append([y, x])
+                                        break
+                                    elif self.b.b[next_y][next_x] == c.BS.get("SPACE"):
+                                        break
+                                    elif self.b.b[next_y][next_x] == c.BS.get("WALL"):
+                                        break
+                                    elif (
+                                        self.b.b[next_y][next_x]
+                                        == self.current_turn * -1
+                                    ):
+                                        continue
+
         return valid_squares
 
     def draw_board(self):
-        print("＋ー" * c.ROWS + "＋")
+        print("　　１　２　３　４　５　６　７　８")
+        print("　＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋")
 
         for y in range(c.COLS):
+            print(" " + str(y + 1), end="")
+
             for x in range(c.ROWS):
                 status = (
-                    "⚫️"
+                    "黒"
                     if self.b.b[y + 1][x + 1] == 1
-                    else "⚪️"
+                    else "白"
                     if self.b.b[y + 1][x + 1] == -1
                     else "　"
                 )
@@ -45,34 +86,83 @@ class Game:
                 print("｜" + status, end="")
 
             print("｜")
-            print("＋ー" * c.ROWS + "＋")
+            print("　＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋ー＋")
 
-    def player_move(self) -> list:
-        square = []
-
+    def player_move(self, valid_squares) -> list:
+        is_thinking = True
+        print("あなたの番です。")
         print("打つマスを選択します。")
 
-        for i in range(c.AXES):
-            square.append(self.input_coord(c.AXES[i]))
+        while is_thinking:
+            coord = []
 
-        return square
+            for i in c.AXES:
+                coord.append(self.input_coord(i))
+                pprint.pprint(coord)
+
+            for i in valid_squares:
+                if coord == i:
+                    is_thinking = False
+
+        return coord
 
     def input_coord(self, axis) -> int:
-        while (coord := int(input(axis + ">"))) not in range(1, 9):
-            print("無効な値です。1~8の範囲で入力してください。")
+        while True:
+            try:
+                coord = int(input(axis + ">"))
+
+                if coord >= 1 and coord <= 8:
+                    print(coord)
+                    return coord
+                else:
+                    print("無効な値です。1~8の範囲で入力してください。")
+            except ValueError:
+                print("無効な値です。1~8の範囲で入力してください。")
 
         return coord
 
     def com_move1(self, valid_squares) -> list:
-        square = []
-        return square
+        print("COMの番です。")
+        time.sleep(1)
+        coord = random.choice(valid_squares)
+        return coord
 
     def com_move2(self, valid_squares) -> list:
-        square = []
-        return square
+        print("COMの番です。")
+        time.sleep(1)
+        coord = []
+        return coord
 
-    def reverse_stones(self):
-        return
+    def reverse_stones(self, coord):
+        y = coord[0]
+        x = coord[1]
+
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                next_y = y + i
+                next_x = x + j
+
+                if self.b.b[next_y][next_x] == self.current_turn * -1:
+                    while True:
+                        next_y += i
+                        next_x += j
+
+                        if self.b.b[next_y][next_x] == self.current_turn:
+                            pre_y = next_y - 1
+                            pre_x = next_x - 1
+
+                            while pre_y != y and pre_x != x:
+                                self.b.b[pre_y][pre_x] = self.current_turn
+                                pre_y = next_y - i
+                                pre_x = next_x - j
+
+                            break
+                        elif self.b.b[next_y][next_x] == c.BS.get("SPACE"):
+                            break
+                        elif self.b.b[next_y][next_x] == c.BS.get("WALL"):
+                            break
+                        elif self.b.b[next_y][next_x] == self.current_turn * -1:
+                            continue
 
     def end_game(self) -> str:
         print("対局が終了しました。")
