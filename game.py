@@ -137,32 +137,41 @@ class Game:
         y = coord[0]
         x = coord[1]
 
+        # ① まず選択マスに石を置く
+        self.b.b[y][x] = self.current_turn
+
         for i in range(-1, 2):
             for j in range(-1, 2):
+                if i == 0 and j == 0:
+                    continue
+
                 next_y = y + i
                 next_x = x + j
 
                 if self.b.b[next_y][next_x] == self.current_turn * -1:
-                    while True:
-                        next_y += i
-                        next_x += j
+                    # 方向を走査して自分の石が見つかるか確認
+                    scan_y = next_y
+                    scan_x = next_x
+                    while self.b.b[scan_y][scan_x] == self.current_turn * -1:
+                        scan_y += i
+                        scan_x += j
 
-                        if self.b.b[next_y][next_x] == self.current_turn:
-                            pre_y = next_y - 1
-                            pre_x = next_x - 1
+                    # ② 自分の石で挟めた場合だけ反転
+                    if self.b.b[scan_y][scan_x] == self.current_turn:
+                        flip_y = next_y
+                        flip_x = next_x
+                        while flip_y != scan_y or flip_x != scan_x:
+                            self.b.b[flip_y][flip_x] = self.current_turn
+                            flip_y += i
+                            flip_x += j
 
-                            while pre_y != y and pre_x != x:
-                                self.b.b[pre_y][pre_x] = self.current_turn
-                                pre_y = next_y - i
-                                pre_x = next_x - j
-
-                            break
-                        elif self.b.b[next_y][next_x] == c.BS.get("SPACE"):
-                            break
-                        elif self.b.b[next_y][next_x] == c.BS.get("WALL"):
-                            break
-                        elif self.b.b[next_y][next_x] == self.current_turn * -1:
-                            continue
+                        break
+                    elif self.b.b[next_y][next_x] == c.BS.get("SPACE"):
+                        break
+                    elif self.b.b[next_y][next_x] == c.BS.get("WALL"):
+                        break
+                    elif self.b.b[next_y][next_x] == self.current_turn * -1:
+                        continue
 
     def end_game(self) -> str:
         print("対局が終了しました。")
