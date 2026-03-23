@@ -3,8 +3,6 @@ import constants as c
 import random
 import time
 
-import pprint
-
 
 class Game:
     def __init__(self, chose_stone, com_level):
@@ -30,9 +28,10 @@ class Game:
                 )
 
                 pass_count = 0
-                self.current_turn *= -1
             else:
                 pass_count += 1
+
+            self.current_turn *= -1
 
         return self.end_game()
 
@@ -76,9 +75,9 @@ class Game:
 
             for x in range(c.ROWS):
                 status = (
-                    "黒"
+                    "⚫️"
                     if self.b.b[y + 1][x + 1] == 1
-                    else "白"
+                    else "⚪️"
                     if self.b.b[y + 1][x + 1] == -1
                     else "　"
                 )
@@ -98,11 +97,13 @@ class Game:
 
             for i in c.AXES:
                 coord.append(self.input_coord(i))
-                pprint.pprint(coord)
 
             for i in valid_squares:
                 if coord == i:
                     is_thinking = False
+
+            if is_thinking:
+                print("そこには打てません")
 
         return coord
 
@@ -137,45 +138,41 @@ class Game:
         y = coord[0]
         x = coord[1]
 
-        # ① まず選択マスに石を置く
         self.b.b[y][x] = self.current_turn
 
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if i == 0 and j == 0:
-                    continue
-
                 next_y = y + i
                 next_x = x + j
 
                 if self.b.b[next_y][next_x] == self.current_turn * -1:
-                    # 方向を走査して自分の石が見つかるか確認
                     scan_y = next_y
                     scan_x = next_x
+
                     while self.b.b[scan_y][scan_x] == self.current_turn * -1:
                         scan_y += i
                         scan_x += j
 
-                    # ② 自分の石で挟めた場合だけ反転
-                    if self.b.b[scan_y][scan_x] == self.current_turn:
-                        flip_y = next_y
-                        flip_x = next_x
-                        while flip_y != scan_y or flip_x != scan_x:
-                            self.b.b[flip_y][flip_x] = self.current_turn
-                            flip_y += i
-                            flip_x += j
+                        if self.b.b[scan_y][scan_x] == self.current_turn:
+                            flip_y = next_y
+                            flip_x = next_x
 
-                        break
-                    elif self.b.b[next_y][next_x] == c.BS.get("SPACE"):
-                        break
-                    elif self.b.b[next_y][next_x] == c.BS.get("WALL"):
-                        break
-                    elif self.b.b[next_y][next_x] == self.current_turn * -1:
-                        continue
+                            while flip_y != scan_y or flip_x != scan_x:
+                                self.b.b[flip_y][flip_x] = self.current_turn
+                                flip_y += i
+                                flip_x += j
+
+                            break
+                        elif self.b.b[next_y][next_x] == c.BS.get("SPACE"):
+                            break
+                        elif self.b.b[next_y][next_x] == c.BS.get("WALL"):
+                            break
+                        elif self.b.b[next_y][next_x] == self.current_turn * -1:
+                            continue
 
     def end_game(self) -> str:
         print("対局が終了しました。")
-
+        self.draw_board()
         stones = self.count_stones()
 
         if stones[0] > stones[1]:
@@ -201,4 +198,6 @@ class Game:
                 elif self.b.b[y][x] == c.BS.get("WHITE"):
                     wc += 1
 
+        print("黒：", bc)
+        print("白：", wc)
         return [bc, wc]
